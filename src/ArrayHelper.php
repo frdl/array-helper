@@ -290,7 +290,7 @@ echo nested_value($array_keymap, $nested_array);   // insane
 	
 
 	public function all(){ 
-		return $this->index;
+		return $this->arr;
    }		
 	/*
 	
