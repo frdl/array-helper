@@ -33,6 +33,69 @@ class ArrayHelper
 	return call_user_func_array([new self($input), $name], $params);
  }
 	
+ public function combine(array $keys = null, array $values = null){
+	return array_combine(null === $keys ? array_keys($this->arr) : $keys, null === $values ? array_values($this->arr) : $values);
+ }
+ public function setKeys(array $keys){
+	return new self($this->combine($keys, array_values($this->arr)));
+ }	
+ public function setValues(array $values){
+	return new self($this->combine(array_keys($this->arr), $values));
+ }	
+ public function toDotTree(string $prefix = '{'/*'${'*/, string $suffix = '}'){
+	 return \frdl\Context::create($this->arr)
+		 ->pfx($prefix)
+		 ->sfx($suffix)
+		 ;
+ }
+ public function findIn($column, $search_value,array $arr = null) {
+	 $arr = (!is_null($arr)) ? $arr : $this->arr;
+     $colors = array_column($arr, $column);
+     $found_key = array_search($search_value, $arr);
+	 return new self($arr[$found_key]);
+ }	
+		
+ public function getByHash($keymap,$hashIndex = null){
+	 
+    $nest_depth = sizeof($keymap);
+	 if(null===$hashIndex){
+		 $hashIndex=max(0,$nest_depth-1);
+	 }
+	 if(is_int($hashIndex)){
+		  $hashIndex=max($hashIndex,$nest_depth);
+	 }
+    $value =  $this->arr;
+    for ($i = 0; $i < $nest_depth; $i++) {
+        $value = $value[$keymap[$i]];
+		if(is_int($hashIndex) && $hashIndex === $i || $hashIndex === $keymap[$i])break;
+		
+    }
+
+    return $value;
+ }	
+
+ 
+ public function find($search_value, $data = null, $hashIndex = null) {
+   return $this->getByHash($this->hash($search_value), $hashIndex); 
+ }	
+ public function hash($needle) {
+    return self::getHash($needle, $this->arr) ;
+ }	
+ public static function getHash($needle, $haystack) {
+    foreach($haystack as $first_level_key=>$value) {
+        if ($needle === $value || preg_match('/^'.$needle.'$\/', $value)) {
+            return array($first_level_key);
+        } elseif (is_array($value)) {
+            $callback = self::getHash($needle, $value);
+            if ($callback) {
+                return array_merge(array($first_level_key), $callback);
+            }
+        }
+    }
+    return false;
+  }
+	
+	
 /*
 Example:
 <?php
@@ -225,51 +288,21 @@ echo nested_value($array_keymap, $nested_array);   // insane
    return (new self($input))->chunk($page, $show_per_page);
  }	
 	
- public function getByHash($keymap,$hashIndex = null){
-	 
-    $nest_depth = sizeof($keymap);
-	 if(null===$hashIndex){
-		 $hashIndex=max(0,$nest_depth-1);
-	 }
-	 if(is_int($hashIndex)){
-		  $hashIndex=max($hashIndex,$nest_depth);
-	 }
-    $value =  $this->arr;
-    for ($i = 0; $i < $nest_depth; $i++) {
-        $value = $value[$keymap[$i]];
-		if(is_int($hashIndex) && $hashIndex === $i || $hashIndex === $keymap[$i])break;
-		
-    }
 
-    return $value;
- }	
- 
- public function find($search_value, $data = null, $hashIndex = null) {
-   return $this->getByHash($this->hash($search_value), $hashIndex); 
- }	
- public function hash($needle) {
-    return self::getHash($needle, $this->arr) ;
- }	
- public static function getHash($needle, $haystack) {
-    foreach($haystack as $first_level_key=>$value) {
-        if ($needle === $value || preg_match('/^'.$needle.'$\/', $value)) {
-            return array($first_level_key);
-        } elseif (is_array($value)) {
-            $callback = self::getHash($needle, $value);
-            if ($callback) {
-                return array_merge(array($first_level_key), $callback);
-            }
-        }
-    }
-    return false;
-  }
-	
-	
+	public function all(){ 
+		return $this->index;
+   }		
+	/*
 	
 	public static function before(array $src,array $in, $pos){
 			$this->index= ((!is_int($pos)) ?  ArrayHelper::getHash($pos, $this->arr)[0] : $pos) -1;
 		return $this;
    }
+	*/
+	public function before($pos){
+			$this->index= ((!is_int($pos)) ?  ArrayHelper::getHash($pos, $this->arr)[0] : $pos) -1;
+		return $this;
+   }	
 	
 	public function after( $pos){
 			$this->index= ((!is_int($pos)) ?  ArrayHelper::getHash($pos, $this->arr)[0] : $pos) + 1;
